@@ -23,10 +23,17 @@ module.exports = app => {
         //Lookup cache server first and return query
         const cachedBlogs = await client.get(req.user.id);
 
+        if (cachedBlogs) {
+            console.log("Serving from cache server");
+            return res.send(JSON.parse(cachedBlogs));
+        }
+
         //Look up MongoDB incase query not in cache and update cache
         const blogs = await Blog.find({ _user: req.user.id });
-
+        console.log("Serving from Mongo server");
         res.send(blogs);
+
+        client.set(req.user.id, JSON.stringify(blogs));
     });
 
     app.post('/api/blogs', requireLogin, async(req, res) => {
